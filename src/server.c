@@ -1,15 +1,32 @@
-/* server.c - inicializacion del socket del servidor */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
 #include "server.h"
+
+int set_nonblocking(int fd)
+{
+	int opciones = fcntl(fd, F_GETFL, 0);
+	if (opciones < 0) {
+		perror("error al obtener opciones del socket");
+		return -1;
+	}
+	
+	// R/W no quede esperando
+	if (fcntl(fd, F_SETFL, opciones | O_NONBLOCK) < 0) {
+		perror("error al establecer modo no bloqueante");
+		return -1;
+	}
+	
+	return 0;
+}
 
 int server_init(int port)
 {
