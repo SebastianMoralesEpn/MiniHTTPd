@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
 {
 	int port = DEFAULT_PORT;
 	int server_fd, client_fd;
-	struct sockaddr_in caddr;
-	unsigned int alen;
-	char buf[BUFSIZE];
-	int n;
+	struct sockaddr_in dir_client;
+	unsigned int tam_dir;
+	char buf_pet[BUFSIZE];
+	int n;  //bytes leidos
 
 	if (argc == 2)
 		port = atoi(argv[1]);
@@ -34,19 +34,19 @@ int main(int argc, char *argv[])
 
 	/* loop iterativo antes de implementar epoll */
 	while (1) {
-		alen = sizeof(caddr);
-		client_fd = accept(server_fd, (struct sockaddr *)&caddr, &alen);
+		tam_dir = sizeof(dir_client);
+		client_fd = accept(server_fd, (struct sockaddr *)&dir_client, &tam_dir);
 		if (client_fd < 0) {
 			if (errno == EINTR)
 				continue;
-			perror("accept");
+			perror("error en accept");
 			continue;
 		}
 
-		n = read(client_fd, buf, sizeof(buf) - 1);
+		n = read(client_fd, buf_pet, sizeof(buf_pet) - 1);
 		if (n > 0) {
-			buf[n] = '\0';
-			printf("--- request ---\n%s\n", buf);
+			buf_pet[n] = '\0';
+			printf("peticion recibida\n%s\n", buf_pet);
 
 			/* respuesta temporal de prueba */
 			const char *resp =
