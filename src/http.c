@@ -2,23 +2,47 @@
 #include "http.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include "mime.h"
 #include "files.h"
 
+
+static int enviar_todo(int socket_cl, const void *datos, size_t longi) {
+    const char *ptr = (const char *)datos;
+    size_t env = 0;
+    while (env < longi) {
+        ssize_t res = write(socket_cl, ptr + env, longi - env);
+        if (res < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                usleep(1000);
+                continue;
+            }
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        env += (size_t)res;
+    }
+    return 0;
+}
+
 void enviar_error(int socket_cl, int cod, const char *mensj) {
-    char resp[512];
+    char cuerpo[512];
+    int len_cuerpo = snprintf(cuerpo, sizeof(cuerpo),
+        "<html><body><h1>%d %s</h1></body></html>\n", cod, mensj);
     
-    int len = snprintf(resp, sizeof(resp),
+    char cabecera[256];
+    int len_cabecera = snprintf(cabecera, sizeof(cabecera),
         "HTTP/1.1 %d %s\r\n"
         "Content-Type: text/html\r\n"
+	"Content-Length: %d\r\n"
         "Connection: close\r\n"
-        "\r\n"
-        "<html><body><h1>%d %s</h1></body></html>\n",
-        cod, mensj, cod, mensj);
+        "\r\n",
+        cod, mensj, len_cuerpo);
 
-    write(socket_cl, resp, len);
+    enviar_todo(socket_cl, cabecera, (size_t)len_cabecera);
+    enviar_todo(socket_cl, cuerpo, (size_t)len_cuerpo);
 }
 
 int solicitud(int socket_cl, const char *buffer, int leidos) {
@@ -78,19 +102,17 @@ int solicitud(int socket_cl, const char *buffer, int leidos) {
 
     const char *mime = obtener_mime(ruta_archivo);
 
-    int len_cuerpo = strlen(arch.cont);
-
     char cabecera[512];
     int len_cabecera = snprintf(cabecera, sizeof(cabecera),
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: %s\r\n"
-        "Content-Length: %d\r\n"
+        "Content-Length: %zu\r\n"
         "Connection: %s\r\n"
         "\r\n",
-        mime, len_cuerpo, keep_alive ? "keep-alive" : "close");
+        mime, arch.tam, keep_alive ? "keep-alive" : "close");
 
-    write(socket_cl, cabecera, len_cabecera);
-    write(socket_cl, arch.cont, len_cuerpo);
+    enviar_todo(socket_cl, cabecera, (size_t)len_cabecera);
+    enviar_todo(socket_cl, arch.cont, arch.tam); //para archivos binarios
 
     liberar_archivo(&arch);
     return keep_alive;
