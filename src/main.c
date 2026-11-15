@@ -1,4 +1,3 @@
-/* main.c - servidor minihttpd */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +9,7 @@
 #include <arpa/inet.h>
 
 #include "server.h"
+#include "http.h"
 
 #define BUFSIZE 4096
 
@@ -46,18 +46,9 @@ int main(int argc, char *argv[])
 		n = read(client_fd, buf_pet, sizeof(buf_pet) - 1);
 		if (n > 0) {
 			buf_pet[n] = '\0';
-			printf("peticion recibida\n%s\n", buf_pet);
+			solicitud(client_fd, buf_pet, n);
 
-			/* respuesta temporal de prueba */
-			const char *resp =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: text/html\r\n"
-				"Content-Length: 44\r\n"
-				"Connection: close\r\n"
-				"\r\n"
-				"<html><body><h1>esto es una prueba</h1></body></html>";
-			write(client_fd, resp, strlen(resp));
-		}
+			}
 		close(client_fd);
 	}
 
