@@ -16,7 +16,7 @@ int server_init(int port)
 	struct sockaddr_in dir_server;
 	int sock_fd, opt = 1;
 
-	memset(&dir:server, 0, sizeof(dir_server)); //limpiado como en passivesock 
+	memset(&dir_server, 0, sizeof(dir_server)); //limpiado como en passivesock 
 	dir_server.sin_family = AF_INET;
 	dir_server.sin_addr.s_addr = INADDR_ANY;
 	dir_server.sin_port = htons(port);

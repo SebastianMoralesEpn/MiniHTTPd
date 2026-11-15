@@ -23,7 +23,7 @@ const char *obtener_mime(const char *ruta) {
         return "application/octet-stream";
     }
 
-    const char *extension = strrchr(ruta_archivo, '.');
+    const char *extension = strrchr(ruta, '.');
     if (extension == NULL) {
         return "application/octet-stream";
     }
