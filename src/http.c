@@ -12,6 +12,7 @@
 static int enviar_todo(int socket_cl, const void *datos, size_t longi) {
     const char *ptr = (const char *)datos;
     size_t env = 0;
+    
     while (env < longi) {
         ssize_t res = write(socket_cl, ptr + env, longi - env);
         if (res < 0) {
@@ -72,6 +73,12 @@ int solicitud(int socket_cl, const char *buffer, int leidos) {
             return 0;
         }
     }
+ 
+    //filtro seguridad
+    if (strstr(uri, "..") != NULL) {
+        enviar_error(socket_cl, 403, "Forbidden");
+        return 0;
+    }
 
     //persistencia
     int keep_alive = 0;
@@ -95,7 +102,16 @@ int solicitud(int socket_cl, const char *buffer, int leidos) {
     snprintf(ruta_archivo, sizeof(ruta_archivo), "www%s", ruta_ok);
 
     archivo_t arch = leer_archivo(ruta_archivo);
-    if (!arch.encont) {
+    if (arch.estado == ARCHIVO_FORBIDDEN) {
+        enviar_error(socket_cl, 404, "Forbidden");
+        return 0;
+    }
+
+    if (arch.estado == ARCHIVO_INTERNAL_SERVER_ERROR) {
+        enviar_error(socket_cl, 500, "Internal Server Error");
+        return 0;
+    }
+    if (!arch.encont || arch.estado == ARCHIVO_NOT_FOUND) {
         enviar_error(socket_cl, 404, "Not Found");
         return 0;
     }

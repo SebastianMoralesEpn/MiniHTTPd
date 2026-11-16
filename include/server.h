@@ -1,6 +1,6 @@
 #ifndef SERVER_H
 #define SERVER_H
-#define BACKLOG      32
+#define BACKLOG 32
 #define DEFAULT_PORT 8080
 #define MAX_EVEN 64
 
