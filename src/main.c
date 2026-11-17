@@ -86,7 +86,7 @@ int main(int argc, char *argv[]){
 
 			// datos para leer
 			else {
-				n = read(fd, buf_pet, sizeof(buf_pet) - 1);
+				n = recv(fd, buf_pet, sizeof(buf_pet) - 1, 0);
 				if (n <= 0) {
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL); //cerro o error
 					close(fd);
